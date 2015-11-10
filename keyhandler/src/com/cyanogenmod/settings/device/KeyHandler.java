@@ -118,6 +118,23 @@ public class KeyHandler implements DeviceKeyHandler {
                     "ProximityWakeLock");
         }
 
+        mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
+        mCameraManager.registerTorchCallback(new MyTorchCallback(), mEventHandler);
+
+        // Get first rear camera id
+        try {
+            for (final String cameraId : mCameraManager.getCameraIdList()) {
+                CameraCharacteristics characteristics =
+                        mCameraManager.getCameraCharacteristics(cameraId);
+                int cOrientation = characteristics.get(CameraCharacteristics.LENS_FACING);
+                if (cOrientation == CameraCharacteristics.LENS_FACING_BACK) {
+                    mRearCameraId = cameraId;
+                    break;
+                }
+            }
+        } catch (CameraAccessException e) {
+            // Ignore
+        }
     }
 
     private class MyTorchCallback extends CameraManager.TorchCallback {
@@ -134,31 +151,13 @@ public class KeyHandler implements DeviceKeyHandler {
                 return;
             mTorchEnabled = false;
         }
+
     }
 
     private void ensureKeyguardManager() {
         if (mKeyguardManager == null) {
             mKeyguardManager =
                     (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
-        }
-    }
-
-    private void updateCameraService() {
-        mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
-        mCameraManager.registerTorchCallback(new MyTorchCallback(), mEventHandler);
-        // Get first rear camera id
-        try {
-            for (final String cameraId : mCameraManager.getCameraIdList()) {
-                CameraCharacteristics characteristics =
-                        mCameraManager.getCameraCharacteristics(cameraId);
-                int cOrientation = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (cOrientation == CameraCharacteristics.LENS_FACING_BACK) {
-                    mRearCameraId = cameraId;
-                    break;
-                }
-            }
-        } catch (CameraAccessException e) {
-            // Ignore
         }
     }
 
@@ -233,9 +232,6 @@ public class KeyHandler implements DeviceKeyHandler {
                 startActivitySafely(w_intent);
                 break;
             case KEY_GESTURE_Z:
-                if (mRearCameraId == null) {
-                    updateCameraService();
-                }
                 if (mRearCameraId != null) {
                     mGestureWakeLock.acquire(GESTURE_WAKELOCK_DURATION);
                     try {

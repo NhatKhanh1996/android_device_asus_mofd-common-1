@@ -11,17 +11,13 @@ import init.modem.rc
 import init.config_init.rc
 import init.logtool.rc
 
-#+++++++++++++++++++++lynn 2014/10/27 FAC++++++++++++++++++++++
-#note:ship IMG no init.fac.ze550ml.rc file.
-import init.fac.flag.rc
-import init.fac.fm.rc
-#---------------------lynn 2014/10/27 FAC----------------------
-
 on early-init
 # Set boot_min_cap for boot to Android.
     setprop ro.boot.min.cap 0
 
 on init
+    write /proc/sys/net/unix/max_dgram_qlen 1000
+
     export LD_SHIM_LIBS /system/bin/mmgr|libshim_mmgr.so:/system/bin/gpsd|libshim_gps.so:/system/lib/hw/gps.mofd_v1.so|libshim_gps.so:/system/lib/hw/sensors.mofd_v1.so|libshim_sensors.so:/system/lib/libtcs.so|libshim_tcs.so:/system/lib/libparameter.so|libshim_audio.so:/system/lib/parameter-framework-plugins/Audio/libtinyalsa_custom-subsystem.so|libshim_audio.so:/system/lib/hw/camera.vendor.mofd_v1.so|libshim_camera.so
 
     write /sys/class/graphics/fbcon/cursor_blink 0
@@ -45,15 +41,19 @@ on init
     chmod 0644 /system/framework/apache-xml.jar
     chmod 0644 /system/framework/ext.jar
 
-    mkdir /ADF 0775 system system
-    mkdir /APD 0775 system system
-
     mkdir /factory
     mkdir /config
     #mkdir /logs
 
     #  Mount the sep filesystem
     mount sepfs sepfs /sys/fs/sepfs
+
+    # Configure the proper cpusets
+    write /dev/cpuset/system-background/cpus 0-3
+    write /dev/cpuset/background/cpus 0-3
+    write /dev/cpuset/foreground/boost/cpus 0-3
+    write /dev/cpuset/foreground/cpus 0-3
+    write /dev/cpuset/cpus 0-3
 
 on boot
 #  Permissions for Thermal Management
@@ -66,42 +66,8 @@ on boot
     chown system system /sys/fps_throttle/notify
     chown system system /sys/fps_throttle/handshake
 
-#   Offload specific properties
-
-    setprop audio.offload.disable 0
-    setprop audio.offload.min.duration.secs 20
-    setprop offload.compress.device 1
-    setprop audio.device.name rt5647audio
-#   audio.offload.capabilities
-#   A 32 bit value.  To be set in HEX
-#   |---------|--------|--------|------------|
-#   |Byte 3   |Byte 2  |Byte 1  |   Byte 0   |
-#   |Reserved |Reserved|Reserved|capabilities|
-#   |---------|--------|--------|------------|
-#   First byte (Byte 0) from the right represents capabilities
-#   Bit position  8th,7th,6th,5th,4th     3rd          2nd      1st
-#   Indication    Reserved for future  Multichannel   Effects   Video
-#   Second, Third and Fourth byte reserved for future use
-#   Set the HEX value by ORing the bits for each format/feature
-#   Example usage: To enable Multichannel offload, value to be set is 4
-    setprop audio.offload.capabilities 1
-
-# set scalability to 1 to enable it in system.
-    setprop audio.offload.scalability 1
-    setprop offload.mixer.volume.ctl.name "media0_in volume 0 volume"
-    setprop offload.mixer.mute.ctl.name "media0_in volume 0 mute"
-    setprop offload.mixer.rp.ctl.name "media0_in volume 0 rampduration"
-
-#   Set the vtsv device and card
-    setprop audio.vtsv.card rt5647audio
-    setprop audio.vtsv.device 5
-    setprop audio.vtsv.dsp_log 0
-
-#   Set the aware card
-    setprop audio.aware.card rt5647audio
-
-# Enable/Disable deep buffer property for mofd_v1
-   setprop lpa.deepbuffer.enable 1
+#   Disable audio offloading
+    setprop audio.offload.disable 1
 
     chown system system /sys/class/pci_bus/0000:00/device/0000:00:16.1/control
     chown system system /sys/class/pci_bus/0000:00/device/0000:00:16.1/data
@@ -218,16 +184,6 @@ on post-fs
     chown system system /dev/monzax
     chmod 0660 /dev/monzax
 
-# For APD
-    mount ext4 /dev/block/by-name/ADF /ADF rw
-    mount ext4 /dev/block/by-name/APD /APD rw
-    restorecon_recursive /ADF
-    restorecon_recursive /APD
-    chown system system /ADF
-    chown system system /APD
-    chmod 0775 /ADF
-    chmod 0775 /APD
-
 # Permissions for LED
     chown system system /sys/class/leds/intel_keypad_led/brightness
 
@@ -247,7 +203,7 @@ on post-fs
 # Permissions for BCU sysfs interface and make generic path to access by apps
     chown system system /sys/devices/platform/bcove_bcu/camflash_ctrl
     symlink /sys/devices/platform/bcove_bcu /dev/bcu
-    restorecon_recursive_force /factory
+    restorecon_recursive /factory
     restorecon_recursive /config
     restorecon_recursive /logs
 
@@ -260,49 +216,19 @@ on post-fs
 # Permissions for Touch Glove Mode
     chown system system /sys/bus/i2c/devices/i2c-7/7-0038/ftsglovemode
 
-    setprop persist.asus.glove 0
-
 # Permissions for Touch dclick Mode
     chown system radio /sys/bus/i2c/devices/i2c-7/7-0038/ftsdclickmode
     chmod 0664 /sys/bus/i2c/devices/i2c-7/7-0038/ftsdclickmode
-    setprop persist.asus.dclick 0
 
 # Permissions for Touch Gesture Mode
     chown system system /sys/bus/i2c/devices/i2c-7/7-0038/ftsgesturemode
 
-    setprop persist.asus.gesture.type 0
-
 # Permissions for Touch Cover Mode
     chown system system /sys/bus/i2c/devices/i2c-7/7-0038/ftscovermode
-
-    setprop persist.asus.flipcovermode 0
 
 # Permissions for Sdcard Power Node
 	chown system system /proc/asus_sd_power
 
-# Any changes we want to make here should be made via cmhw, not via
-# persistent properties...
-#
-#on property:persist.asus.glove=0
-#    write /sys/bus/i2c/devices/i2c-7/7-0038/ftsglovemode 0
-#
-#on property:persist.asus.glove=1
-#    write /sys/bus/i2c/devices/i2c-7/7-0038/ftsglovemode 1
-#
-#on property:persist.asus.dclick=0
-#    write /sys/bus/i2c/devices/i2c-7/7-0038/ftsdclickmode 0
-#
-#on property:persist.asus.dclick=1
-#    write /sys/bus/i2c/devices/i2c-7/7-0038/ftsdclickmode 1
-#
-#on property:persist.asus.gesture.type=*
-#    write /sys/bus/i2c/devices/i2c-7/7-0038/ftsgesturemode ${persist.asus.gesture.type}
-#
-#on property:persist.asus.flipcovermode=0
-#    write /sys/bus/i2c/devices/i2c-7/7-0038/ftscovermode 0
-#
-#on property:persist.asus.flipcovermode=1
-#    write /sys/bus/i2c/devices/i2c-7/7-0038/ftscovermode 1
 
 service sl_si_service /system/bin/sl_si_service d=1
     user system
@@ -366,18 +292,6 @@ service sensorhubd /system/bin/sensorhubd
     group system
     socket sensorhubd stream 660 system system
 
-service rfid_monzaxd /system/bin/rfid_monzaxd
-    class main
-    user system
-    group system
-
-# ASUS Product Demo
-on property:persist.sys.enableAPD=1
-    mount ext4 /dev/block/by-name/APD /APD rw
-    restorecon_recursive /APD
-    chown system system /APD
-    chmod 0775 /APD
-
 on charger
     mount ext4 /dev/block/by-name/system /system ro noatime barrier=1,data=ordered
     mount ext4 /dev/block/by-name/logs /logs nosuid nodev barrier=1,data=ordered
@@ -424,6 +338,12 @@ service cdrom /system/bin/sh /system/etc/init.cdrom.sh
     oneshot
 
 # From init.rc in stock, these redefine service definitions
+
+service_redefine media /system/bin/mediaserver
+    class main
+    user media
+    group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc mediadrm radio system
+    ioprio rt 4
 
 service_redefine keystore /system/bin/keystore /data/misc/keystore
     class main

@@ -59,6 +59,7 @@ TARGET_PROVIDES_CAMERA_HAL := true
 # Charger
 BOARD_CHARGER_ENABLE_SUSPEND := true
 BOARD_CHARGER_SHOW_PERCENTAGE := true
+BOARD_HEALTHD_CUSTOM_CHARGER_RES := device/asus/mofd-common/charger/images
 
 # Dex-preoptimization: Speeds up initial boot (if we ever o a user build, which we don't)
 ifeq ($(HOST_OS),linux)
@@ -105,6 +106,9 @@ BOARD_USES_VIDEO := true
 
 # enabled to carry out all drawing operations performed on a View's canvas with GPU for 2D rendering pipeline.
 USE_OPENGL_RENDERER := true
+
+# Disable an optimization that causes rendering issues for us
+TARGET_REQUIRES_SYNCHRONOUS_SETSURFACE := true
 
 # Init
 TARGET_IGNORE_RO_BOOT_SERIALNO := true
@@ -157,11 +161,11 @@ BOARD_CACHEIMAGE_PARTITION_SIZE := 268435456
 TARGET_POWERHAL_VARIANT := mofd_v1
 
 # Radio
-BOARD_RIL_CLASS := ../../../device/asus/mofd-common/ril
+BOARD_PROVIDES_LIBRIL := true
 
 # Recovery
 BOARD_CANT_BUILD_RECOVERY_FROM_BOOT_PATCH := true
-TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
+TARGET_RECOVERY_PIXEL_FORMAT := "BGRA_8888"
 COMMON_GLOBAL_CFLAGS += -DNO_SECURE_DISCARD
 TARGET_RECOVERY_FSTAB := device/asus/mofd-common/rootdir/etc/fstab.mofd_v1
 TARGET_RECOVERY_DEVICE_MODULES := librecovery_updater_mofd
@@ -171,7 +175,7 @@ BUILD_WITH_SECURITY_FRAMEWORK := chaabi_token
 BUILD_WITH_CHAABI_SUPPORT := true
 
 # SELinux
-# BOARD_SEPOLICY_DIRS := device/asus/mofd-common/sepolicy
+BOARD_SEPOLICY_DIRS += device/asus/mofd-common/sepolicy
 
 # Tap-to-Wake
 TARGET_TAP_TO_WAKE_NODE := "/sys/devices/pci0000:00/0000:00:09.2/i2c-7/7-0038/ftsdclickmode"
@@ -183,6 +187,7 @@ BOARD_HOSTAPD_PRIVATE_LIB   := lib_driver_cmd_$(BOARD_WLAN_DEVICE)
 WPA_SUPPLICANT_VERSION      := VER_0_8_X
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
 BOARD_HOSTAPD_DRIVER        := NL80211
+CONFIG_HS20                 := true
 WIFI_DRIVER_FW_PATH_PARAM   := "/sys/module/bcmdhd/parameters/firmware_path"
 WIFI_DRIVER_FW_PATH_AP      := "/system/etc/firmware/fw_bcmdhd_apsta.bin"
 WIFI_DRIVER_FW_PATH_STA     := "/system/etc/firmware/fw_bcmdhd.bin"

@@ -61,7 +61,7 @@ PRODUCT_PACKAGES += \
 ADDITIONAL_DEFAULT_PROPERTIES += ro.sys.powerctl.no.shutdown=1
 
 # Dalvik
-PRODUCT_PROPERTY_OVERRIDES +=  \
+PRODUCT_PROPERTY_OVERRIDES += \
     ro.dalvik.vm.isa.arm=x86 \
     dalvik.vm.implicit_checks=none
 
@@ -84,8 +84,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.spid.gps.tty=ttyMFD2
 
 # Houdini (arm native bridge)
-PRODUCT_PROPERTY_OVERRIDES +=  \
-    ro.enable.native.bridge.exec=1 \
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.enable.native.bridge.exec=1
 
 ADDITIONAL_DEFAULT_PROPERTIES += ro.dalvik.vm.native.bridge=libhoudini.so
 
@@ -113,7 +113,7 @@ PRODUCT_PACKAGES += \
     lights.mofd_v1
 
 # Media
-PRODUCT_PROPERTY_OVERRIDES +=  \
+PRODUCT_PROPERTY_OVERRIDES += \
     drm.service.enabled=true \
     ro.com.widevine.cachesize=16777216 \
     media.stagefright.cache-params=10240/20480/15 \
@@ -186,7 +186,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.ril.status.polling.enable=0 \
     rild.libpath=/system/lib/librapid-ril-core.so \
     ro.telephony.default_network=9 \
-    ro.telephony.ril_class=Zenfone2RIL
+    ro.ril.telephony.mqanelements=5
 
 # Ramdisk
 PRODUCT_PACKAGES += \
@@ -225,6 +225,9 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     libshim_sensors
 
+PRODUCT_COPY_FILES += \
+    device/asus/mofd-common/configs/sensor_hal_config_default.xml:system/etc/sensor_hal_config_default.xml
+
 # Thermal itux
 ENABLE_ITUXD := true
 PRODUCT_PACKAGES += \
@@ -246,7 +249,6 @@ PRODUCT_PACKAGES += \
 
 # Permissions
 PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/android.hardware.audio.low_latency.xml:system/etc/permissions/android.hardware.audio.low_latency.xml \
     frameworks/native/data/etc/android.hardware.bluetooth_le.xml:system/etc/permissions/android.hardware.bluetooth_le.xml \
     frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
     frameworks/native/data/etc/android.hardware.camera.front.xml:system/etc/permissions/android.hardware.camera.front.xml \
@@ -277,6 +279,9 @@ PRODUCT_PACKAGES += \
     dhcpcd.conf \
     wpa_supplicant \
     wpa_supplicant.conf
+
+PRODUCT_COPY_FILES += \
+    device/asus/mofd-common/configs/wpa_supplicant_overlay.conf:system/etc/wifi/wpa_supplicant_overlay.conf
 
 $(call inherit-product-if-exists, vendor/asus/mofd-common/mofd-common-vendor.mk)
 

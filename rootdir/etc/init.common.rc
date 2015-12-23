@@ -1,8 +1,5 @@
 import /init.watchdog.rc
 import /init.firmware.rc
-import /init.intel.feature.asf.rc
-import /init.intel.features.rc
-import /init.ksm.rc
 import /init.power.mofd_v1.rc
 import /init.readahead.rc
 import /init.zram.rc
@@ -62,8 +59,6 @@ on boot
     #enable kernel compaction
     write /proc/sys/vm/compact_memory 1
 
-    setprop persist.sys.enableAPD 0
-
 on fs
     mkdir /factory 0775 system system
     mkdir /config 0775 system system
@@ -91,6 +86,7 @@ on post-fs
     chown system system /sys/devices/system/cpu/cpufreq/interactive/timer_rate
     chown system system /sys/devices/system/cpu/cpufreq/interactive/go_hispeed_load
     chown system system /sys/devices/system/cpu/cpufreq/interactive/boostpulse
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/hispeed_freq
     chown system system /sys/devices/system/cpu/cpufreq/interactive/touchboostpulse
     chown system system /sys/devices/system/cpu/cpufreq/interactive/touchboostpulse_duration
     chown system system /sys/devices/system/cpu/cpufreq/interactive/touchboost_freq
@@ -182,11 +178,6 @@ service pvrsrvctl /system/vendor/bin/pvrsrvctl --no-module --start
     oneshot
     user root
 
-service ct_monitor /system/bin/ct_monitor
-    class core
-    oneshot
-    user root
-
 service charger_app /charger
     class charger
     user root
@@ -198,16 +189,6 @@ service logbackup /system/bin/sh /system/etc/packlogs.sh
     oneshot
     disabled
     seclabel u:r:logtoold:s0
-
-service umount_apd /system/bin/umount_apd.sh
-    disabled
-    user root
-    group root
-    oneshot
-
-on property:persist.sys.enableAPD=0
-    start umount_apd
-
 
 # Enable native bridge for target executables
 on property:ro.enable.native.bridge.exec=1
@@ -244,14 +225,6 @@ on property:sys.shutdown.requested=1recovery
 
 on property:sys.shutdown.requested=1bootloader
     write /sys/devices/virtual/misc/watchdog/reboot_ongoing 1
-
-# bugreport is triggered by holding down volume down, volume up and power
-service bugreport /system/bin/dumpstate -d -p -B \
-        -o /data/data/com.android.shell/files/bugreports/bugreport
-    class main
-    disabled
-    oneshot
-    keycodes 114 115 116
 
 #Enable ADB for factory test
 service enable_adb /system/bin/sh /system/bin/adbon.sh

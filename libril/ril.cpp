@@ -282,6 +282,7 @@ static int responseSMS(Parcel &p, void *response, size_t responselen);
 static int responseSIM_IO(Parcel &p, void *response, size_t responselen);
 static int responseCallForwards(Parcel &p, void *response, size_t responselen);
 static int responseDataCallList(Parcel &p, void *response, size_t responselen);
+static int responseRadioPower(Parcel &p, void *response, size_t responselen);
 static int responseSetupDataCall(Parcel &p, void *response, size_t responselen);
 static int responseRaw(Parcel &p, void *response, size_t responselen);
 static int responseSsn(Parcel &p, void *response, size_t responselen);
@@ -2040,11 +2041,15 @@ invalid:
     return;
 }
 
+static bool radio_is_on = false;
+
 static void dispatchRadioPower(Parcel &p, RequestInfo *pRI) {
     int status;
     int count;
     int is_on;
+    size_t parcelOffset;
 
+    parcelOffset = p.dataPosition();
     status = p.readInt32 (&count);
 
     if (status != NO_ERROR || count == 0) {
@@ -2057,13 +2062,10 @@ static void dispatchRadioPower(Parcel &p, RequestInfo *pRI) {
         return;
     }
 
-    RLOGI("dispatchRadioPower: Issuing local RADIO_POWER {%d}", is_on);
-    issueLocalRequest(RIL_REQUEST_RADIO_POWER, &is_on, sizeof(int), pRI->socket_id);
-    if (is_on) {
-        sleep(2);
-        RLOGI("dispatchRadioPower: Enabling NETWORK_SELECTION_AUTOMATIC");
-        issueLocalRequest(RIL_REQUEST_SET_NETWORK_SELECTION_AUTOMATIC, NULL, 0, pRI->socket_id);
-    }
+    radio_is_on = is_on;
+    p.setDataPosition(parcelOffset);
+
+    dispatchInts(p, pRI);
 }
 
 static int
@@ -2293,6 +2295,18 @@ static int responseVoid(Parcel &p, void *response, size_t responselen) {
     return 0;
 }
 
+static int responseRadioPower(Parcel &p, void *response, size_t responselen) {
+    if (radio_is_on) {
+        RLOGI("dispatchRadioPower: Enabling NETWORK_SELECTION_AUTOMATIC");
+#if SIM_COUNT >= 2
+#error "This code only works for single SIM"
+#else
+        issueLocalRequest(RIL_REQUEST_SET_NETWORK_SELECTION_AUTOMATIC, NULL, 0, RIL_SOCKET_1);
+#endif
+    }
+    return responseVoid(p, response, responselen);
+}
+
 static int responseCallList(Parcel &p, void *response, size_t responselen) {
     int num;
 
@@ -2429,6 +2443,10 @@ static int responseDataCallListV4(Parcel &p, void *response, size_t responselen)
     return 0;
 }
 
+static int is_valid_addr(const char *addr) {
+    return addr != NULL && strcmp(addr, "0.0.0.0") != 0 && strcmp(addr, "::") != 0;
+}
+
 static int responseDataCallListV6(Parcel &p, void *response, size_t responselen)
 {
     if (response == NULL && responselen != 0) {
@@ -2452,7 +2470,29 @@ static int responseDataCallListV6(Parcel &p, void *response, size_t responselen)
     startResponse;
     int i;
     for (i = 0; i < num; i++) {
-        p.writeInt32((int)p_cur[i].status);
+        // p_cur[i].status appears to be a short that was memcpy'ed into the bytes
+        // of an int.  Undo that by turning it into a short and then the proper
+        // type promotion back to an int.
+        short short_status = p_cur[i].status;
+        int status = short_status;
+        #define MAX_DNS_FAILURES 3
+        static int n_dns_failures = 0;
+
+        if (status == 0 && ! is_valid_addr(p_cur[i].dnses)) {
+            n_dns_failures++;
+            RLOGD("responseDataCallListV6: DNS servers missing, n_dns_failures=%d", n_dns_failures);
+            if (n_dns_failures >= MAX_DNS_FAILURES) {
+                RLOGW("responseDataCallListV6: Too many DNS failures, trigger modem restart");
+                status = PDP_FAIL_REGULAR_DEACTIVATION;
+                n_dns_failures = 0;
+            } else {
+                status = PDP_FAIL_ACTIVATION_REJECT_UNSPECIFIED;
+            }
+        } else if (status == 0) {
+            n_dns_failures = 0;
+        }
+
+        p.writeInt32(status);
         p.writeInt32(p_cur[i].suggestedRetryTime);
         p.writeInt32(p_cur[i].cid);
         p.writeInt32(p_cur[i].active);
@@ -2462,7 +2502,7 @@ static int responseDataCallListV6(Parcel &p, void *response, size_t responselen)
         writeStringToParcel(p, p_cur[i].dnses);
         writeStringToParcel(p, p_cur[i].gateways);
         appendPrintBuf("%s[status=%d,retry=%d,cid=%d,%s,%s,%s,%s,%s,%s],", printBuf,
-            p_cur[i].status,
+            status,
             p_cur[i].suggestedRetryTime,
             p_cur[i].cid,
             (p_cur[i].active==0)?"down":"up",
@@ -4430,6 +4470,12 @@ checkAndDequeueRequestInfo(struct RequestInfo *pRI) {
     return ret;
 }
 
+static bool shouldCallResponseFunction(RequestInfo *pRI, void *response) {
+    if (pRI->pCI->requestNumber == RIL_REQUEST_RADIO_POWER) {
+        return true;
+    }
+    return response != NULL;
+}
 
 extern "C" void
 RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responselen) {
@@ -4486,7 +4532,7 @@ RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responsel
 
         p.writeInt32 (e);
 
-        if (response != NULL) {
+        if (shouldCallResponseFunction(pRI, response)) {
             // there is a response payload, no matter success or not.
             ret = pRI->pCI->responseFunction(p, response, responselen);
 

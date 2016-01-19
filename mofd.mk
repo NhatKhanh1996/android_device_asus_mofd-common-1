@@ -55,7 +55,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Camera
 PRODUCT_PACKAGES += \
     camera.mofd_v1 \
-    libshim_camera
+    libshim_camera \
+    Snap
 
 # Charger
 PRODUCT_PACKAGES += \
@@ -148,13 +149,14 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     libstagefrighthw
 
-# Media: libmix
+# libmix
 PRODUCT_PACKAGES += \
     libmixvbp_mpeg4 \
     libmixvbp_h264 \
     libmixvbp_h264secure \
     libmixvbp_vc1 \
     libmixvbp_vp8 \
+    libmixvbp_mpeg2 \
     libva_videodecoder \
     libva_videoencoder
 
@@ -166,6 +168,7 @@ PRODUCT_PACKAGES += \
     libOMXVideoDecoderMPEG4 \
     libOMXVideoDecoderWMV \
     libOMXVideoDecoderVP8 \
+    libOMXVideoDecoderMPEG2 \
     libOMXVideoDecoderVP9HWR \
     libOMXVideoDecoderVP9Hybrid \
     libOMXVideoEncoderAVC \

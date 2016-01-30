@@ -16,17 +16,11 @@
 
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-
-#include <utils/SystemClock.h>
+#include <hardware/power.h>
 
 #define LOG_TAG "PowerHAL"
 #include <utils/Log.h>
-
-#include <hardware/hardware.h>
-#include <hardware/power.h>
 
 struct local_power_module {
     struct power_module base;
@@ -34,13 +28,10 @@ struct local_power_module {
 
 #define BUF_SIZE 80
 
-#define HISPEED_FREQ_PATH "/sys/devices/system/cpu/cpufreq/interactive/hispeed_freq"
-#define HISPEED_FREQ_OFF  "500000"
-#define TOUCHBOOST_PATH   "/sys/devices/system/cpu/cpufreq/interactive/touchboostpulse"
-#define TOUCHBOOST_MIN_INTERVAL_MS 200
+#define CPU2_ONLINE       "/sys/devices/system/cpu/cpu2/online"
+#define CPU3_ONLINE       "/sys/devices/system/cpu/cpu3/online"
 
-static int64_t last_touchboost;
-static char hispeed_freq[BUF_SIZE];
+static char last_online[2][BUF_SIZE];
 
 static int sysfs_read(const char *path, char buf[BUF_SIZE]) {
     int len;
@@ -96,47 +87,23 @@ static void sysfs_write_unless_empty(const char *path, const char *const s) {
     }
 }
 
+static void power_init(struct power_module *) {
+}
+
 void power_set_interactive(struct power_module *, int on) {
     if (on) {
-        sysfs_write_unless_empty(HISPEED_FREQ_PATH, hispeed_freq);
+        sysfs_write_unless_empty(CPU2_ONLINE, last_online[0]);
+        sysfs_write_unless_empty(CPU3_ONLINE, last_online[1]);
     } else {
-        sysfs_read_or_empty(HISPEED_FREQ_PATH, hispeed_freq);
-        sysfs_write(HISPEED_FREQ_PATH, HISPEED_FREQ_OFF);
+        sysfs_read_or_empty(CPU2_ONLINE, last_online[0]);
+        sysfs_read_or_empty(CPU3_ONLINE, last_online[1]);
+
+        sysfs_write(CPU2_ONLINE, "0");
+        sysfs_write(CPU3_ONLINE, "0");
     }
 }
 
-static void touchboost() {
-    int64_t now = android::uptimeMillis();
-    if (now - last_touchboost > TOUCHBOOST_MIN_INTERVAL_MS) {
-        sysfs_write(TOUCHBOOST_PATH, "1");
-        last_touchboost = now;
-    }
-}
-
-static void power_hint(struct power_module *module, power_hint_t hint, void *data)
-{
-    struct local_power_module *pm = (struct local_power_module *) module;
-    int duration;
-
-    switch (hint) {
-    case POWER_HINT_INTERACTION:
-        touchboost();
-        break;
-
-    case POWER_HINT_CPU_BOOST:
-        duration = data != NULL ? (int) data : 1;
-        touchboost();
-
-    case POWER_HINT_VSYNC:
-        break;
-
-    default:
-        break;
-    }
-}
-
-static void power_init(struct power_module *)
-{
+static void power_hint(struct power_module *module __unused, power_hint_t hint __unused, void *data __unused) {
 }
 
 static struct hw_module_methods_t power_module_methods = {

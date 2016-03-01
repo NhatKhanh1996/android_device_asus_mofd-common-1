@@ -54,6 +54,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Camera
 PRODUCT_PACKAGES += \
+    bspcapability \
     camera.mofd_v1 \
     libshim_camera \
     Snap
@@ -163,7 +164,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     libwrs_omxil_common \
     libwrs_omxil_core_pvwrapped \
-    libOMXVideoDecoderAVC \
     libOMXVideoDecoderH263 \
     libOMXVideoDecoderMPEG4 \
     libOMXVideoDecoderWMV \

@@ -20,16 +20,16 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v14.preference.PreferenceFragment;
-import android.support.v14.preference.SwitchPreference;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceCategory;
+import android.preference.Preference;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
+import android.preference.SwitchPreference;
 import android.provider.Settings;
 import android.view.ViewGroup;
 
 import cyanogenmod.providers.CMSettings;
 
-public class TouchscreenGestureFragment extends PreferenceFragment {
+public class TouchscreenGestureSettings extends PreferenceActivity {
 
     private static final String CATEGORY_AMBIENT_DISPLAY = "ambient_display_key";
     private static final String KEY_GESTURE_HAND_WAVE = "gesture_hand_wave";
@@ -44,7 +44,8 @@ public class TouchscreenGestureFragment extends PreferenceFragment {
     private SwitchPreference mHapticFeedback;
 
     @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.touchscreen_panel);
 
         // Ambient Display
@@ -63,17 +64,19 @@ public class TouchscreenGestureFragment extends PreferenceFragment {
             Preference pref = findPreference(gestureKey);
             pref.setOnPreferenceChangeListener(mGesturePrefListener);
         }
+
+        ((ViewGroup)getListView().getParent()).setPadding(0, 0, 0, 0);
     }
 
     @Override
-    public void onResume() {
+    protected void onResume() {
         super.onResume();
-        mHapticFeedback.setChecked(CMSettings.System.getInt(getContext().getContentResolver(),
+        mHapticFeedback.setChecked(CMSettings.System.getInt(getContentResolver(),
                 CMSettings.System.TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK, 1) != 0);
     }
 
     private boolean isDozeEnabled() {
-        return Settings.Secure.getInt(getContext().getContentResolver(),
+        return Settings.Secure.getInt(getContentResolver(),
                 Settings.Secure.DOZE_ENABLED, 1) != 0;
     }
 
@@ -98,7 +101,7 @@ public class TouchscreenGestureFragment extends PreferenceFragment {
         @Override
         public boolean onPreferenceChange(Preference preference, Object newValue) {
             final boolean value = (Boolean) newValue;
-            CMSettings.System.putInt(getContext().getContentResolver(),
+            CMSettings.System.putInt(getContentResolver(),
                     CMSettings.System.TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK, value ? 1 : 0);
             return true;
         }
@@ -116,7 +119,7 @@ public class TouchscreenGestureFragment extends PreferenceFragment {
     private final Runnable mUpdateGestures = new Runnable() {
         @Override
         public void run() {
-            CMActionsSettings.updateGestureMode(getContext());
+            CMActionsSettings.updateGestureMode(TouchscreenGestureSettings.this);
         }
     };
 }

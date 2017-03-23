@@ -16,6 +16,7 @@
 
 package com.cyanogenmod.settings.device;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,6 +26,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.SwitchPreference;
 import android.provider.Settings;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 
 import cyanogenmod.providers.CMSettings;
@@ -65,6 +67,9 @@ public class TouchscreenGestureSettings extends PreferenceActivity {
             pref.setOnPreferenceChangeListener(mGesturePrefListener);
         }
 
+        final ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
         ((ViewGroup)getListView().getParent()).setPadding(0, 0, 0, 0);
     }
 
@@ -73,6 +78,15 @@ public class TouchscreenGestureSettings extends PreferenceActivity {
         super.onResume();
         mHapticFeedback.setChecked(CMSettings.System.getInt(getContentResolver(),
                 CMSettings.System.TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK, 1) != 0);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return false;
     }
 
     private boolean isDozeEnabled() {

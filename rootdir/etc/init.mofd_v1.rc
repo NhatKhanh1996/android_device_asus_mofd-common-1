@@ -227,9 +227,6 @@ on post-fs
 # Permissions for Touch Cover Mode
     chown system system /sys/bus/i2c/devices/i2c-7/7-0038/ftscovermode
 
-# Permissions for keydisabler
-    chown root system /sys/bus/i2c/devices/i2c-7/7-0038/ftskeypadenable
-
 #Enable/disable hall sensor irq
 on property:persist.asus.coverenabled=1
     write /sys/kernel/hall_sensor_kobject/hall_sensor/activity 1

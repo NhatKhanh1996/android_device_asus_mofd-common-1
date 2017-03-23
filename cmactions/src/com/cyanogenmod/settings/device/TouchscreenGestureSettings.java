@@ -20,7 +20,6 @@ import com.android.internal.util.cm.ScreenType;
 
 import android.app.ActionBar;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.view.Menu;

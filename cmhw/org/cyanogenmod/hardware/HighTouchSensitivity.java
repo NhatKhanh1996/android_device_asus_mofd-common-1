@@ -16,7 +16,8 @@
 
 package org.cyanogenmod.hardware;
 
-import org.cyanogenmod.internal.util.FileUtils;
+import java.io.File;
+import org.cyanogenmod.hardware.util.FileUtils;
 
 
 /**
@@ -32,7 +33,8 @@ public class HighTouchSensitivity {
      * @return boolean Supported devices must return always true
      */
     public static boolean isSupported() {
-        return FileUtils.isFileWritable(GLOVEMODE_PATH);
+        File f = new File(GLOVEMODE_PATH);
+        return f.exists();
     }
 
     /** This method returns the current activation status of high touch sensitivity
@@ -41,7 +43,10 @@ public class HighTouchSensitivity {
      * or the operation failed while reading the status; true in any other case.
      */
     public static boolean isEnabled() {
-        return FileUtils.readOneLine(GLOVEMODE_PATH).equals("1");
+        int i;
+        i = Integer.parseInt(FileUtils.readOneLine(GLOVEMODE_PATH));
+
+        return i == 1 ? true : false;
     }
 
     /**
@@ -52,6 +57,6 @@ public class HighTouchSensitivity {
      * failed; true in any other case.
      */
     public static boolean setEnabled(boolean status) {
-        return FileUtils.writeLine(GLOVEMODE_PATH, (status ? "1" : "0"));
+        return FileUtils.writeLine(GLOVEMODE_PATH, String.valueOf(status ? 1 : 0));
     }
 }

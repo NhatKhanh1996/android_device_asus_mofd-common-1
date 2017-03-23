@@ -16,7 +16,8 @@
 
 package org.cyanogenmod.hardware;
 
-import org.cyanogenmod.internal.util.FileUtils;
+import org.cyanogenmod.hardware.util.FileUtils;
+import java.io.File;
 
 /*
  * Disable capacitive keys
@@ -32,11 +33,11 @@ public class KeyDisabler {
     private static String CONTROL_PATH = "/sys/bus/i2c/devices/i2c-7/7-0038/ftskeypadenable";
 
     public static boolean isSupported() {
-        return FileUtils.isFileWritable(CONTROL_PATH);
+        return new File(CONTROL_PATH).exists();
     }
 
     public static boolean isActive() {
-        return FileUtils.readOneLine(CONTROL_PATH).equals("0");
+        return (FileUtils.readOneLine(CONTROL_PATH).equals("0"));
     }
 
     public static boolean setActive(boolean state) {

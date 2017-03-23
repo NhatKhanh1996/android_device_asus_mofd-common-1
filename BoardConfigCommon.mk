@@ -61,7 +61,6 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
     media.stagefright.less-secure=true
 
 # Charger
-WITH_CM_CHARGER := false
 BOARD_CHARGER_ENABLE_SUSPEND := true
 
 # Dex-preoptimization: Speeds up initial boot (if we ever o a user build, which we don't)

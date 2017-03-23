@@ -174,7 +174,7 @@ public class KeyHandler implements DeviceKeyHandler {
                             UserHandle.CURRENT);
                     action = MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA;
                 }
-                mPowerManager.wakeUp(SystemClock.uptimeMillis(), "wakeup-gesture");
+                mPowerManager.wakeUp(SystemClock.uptimeMillis());
                 Intent c_intent = new Intent(action, null);
                 startActivitySafely(c_intent);
                 break;
@@ -185,7 +185,7 @@ public class KeyHandler implements DeviceKeyHandler {
                     mContext.sendBroadcastAsUser(new Intent(ACTION_DISMISS_KEYGUARD),
                             UserHandle.CURRENT);
                 }
-                mPowerManager.wakeUp(SystemClock.uptimeMillis(), "wakeup-gesture");
+                mPowerManager.wakeUp(SystemClock.uptimeMillis());
                 Intent e_intent = new Intent(Intent.ACTION_MAIN, null);
                 e_intent.addCategory(Intent.CATEGORY_APP_EMAIL);
                 startActivitySafely(e_intent);
@@ -197,7 +197,7 @@ public class KeyHandler implements DeviceKeyHandler {
                     mContext.sendBroadcastAsUser(new Intent(ACTION_DISMISS_KEYGUARD),
                             UserHandle.CURRENT);
                 }
-                mPowerManager.wakeUp(SystemClock.uptimeMillis(), "wakeup-gesture");
+                mPowerManager.wakeUp(SystemClock.uptimeMillis());
                 String defaultApplication = Settings.Secure.getString(mContext.getContentResolver(),
                     SMS_DEFAULT_APPLICATION);
                 PackageManager pm = mContext.getPackageManager();
@@ -213,7 +213,7 @@ public class KeyHandler implements DeviceKeyHandler {
                     mContext.sendBroadcastAsUser(new Intent(ACTION_DISMISS_KEYGUARD),
                             UserHandle.CURRENT);
                 }
-                mPowerManager.wakeUp(SystemClock.uptimeMillis(), "wakeup-gesture");
+                mPowerManager.wakeUp(SystemClock.uptimeMillis());
                 Intent v_intent = new Intent(Intent.ACTION_DIAL, null);
                 startActivitySafely(v_intent);
                 break;
@@ -224,7 +224,7 @@ public class KeyHandler implements DeviceKeyHandler {
                     mContext.sendBroadcastAsUser(new Intent(ACTION_DISMISS_KEYGUARD),
                             UserHandle.CURRENT);
                 }
-                mPowerManager.wakeUp(SystemClock.uptimeMillis(), "wakeup-gesture");
+                mPowerManager.wakeUp(SystemClock.uptimeMillis());
                 Intent w_intent = new Intent(Intent.ACTION_WEB_SEARCH, null);
                 startActivitySafely(w_intent);
                 break;
@@ -247,7 +247,7 @@ public class KeyHandler implements DeviceKeyHandler {
         boolean isKeySupported = ArrayUtils.contains(sSupportedGestures, event.getScanCode());
         if (isKeySupported && !mEventHandler.hasMessages(GESTURE_REQUEST)) {
             if (event.getScanCode() == KEY_GESTURE_DOUBLECLICK && !mPowerManager.isScreenOn()) {
-                mPowerManager.wakeUpWithProximityCheck(SystemClock.uptimeMillis(), "wakeup-gesture-proximity");
+                mPowerManager.wakeUpWithProximityCheck(SystemClock.uptimeMillis());
                 return true;
             }
             Message msg = getMessageForKeyEvent(event);

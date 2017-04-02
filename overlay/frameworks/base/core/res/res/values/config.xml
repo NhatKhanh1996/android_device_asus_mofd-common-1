@@ -409,4 +409,7 @@
           turned off and the screen off animation has been performed. -->
     <bool name="config_dozeAfterScreenOff">false</bool>
 
+    <bool name="config_proximityCheckOnWake">true</bool>
+    <bool name="config_proximityCheckOnWakeEnabledByDefault">true</bool>
+
 </resources>

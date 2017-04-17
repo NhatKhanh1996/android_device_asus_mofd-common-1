@@ -420,11 +420,4 @@
     <integer name="config_proximityCheckTimeout">100</integer>
     <bool name="config_proximityCheckOnWakeEnabledByDefault">true</bool>
 
-    <!-- Extended Boosts for QPerformance -->
-    <!-- Whether cpu boost is enabled right after boot -->
-    <bool name="config_enableCpuBoostOnBoot">true</bool>
-
-    <!-- Duration of the boost in seconds, default is 30 -->
-    <integer name="onbootboost_duration">20</integer>
-
 </resources>
